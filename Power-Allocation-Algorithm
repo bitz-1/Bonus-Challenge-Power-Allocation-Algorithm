@@ -1,1 +1,58 @@
+// Constants
+MAX_CAPACITY = 100         // Total system capacity
+SAFE_CAPACITY = 92         // Safe usable capacity
+MAX_DEVICE_CAPACITY = 40   // Max power a single device can use
 
+// Variables
+devices = Queue()          // FIFO queue to track connected devices
+currentUsage = 0           // Total power currently allocated
+
+// Allocate power to all active devices
+function allocatePower():
+    availablePower = SAFE_CAPACITY
+    for each device in devices:
+        if availablePower > 0:
+            maxPower = min(device.requestedPower, MAX_DEVICE_CAPACITY)
+            device.allocatedPower = min(maxPower, availablePower)
+            availablePower -= device.allocatedPower
+        else:
+            device.allocatedPower = 0
+
+// Connect a new device
+function connectDevice(deviceId, requestedPower):
+    requestedPower = min(requestedPower, MAX_DEVICE_CAPACITY)
+    newDevice = { id: deviceId, requestedPower: requestedPower, allocatedPower: 0 }
+    devices.enqueue(newDevice)
+    allocatePower()
+
+// Disconnect an existing device
+function disconnectDevice(deviceId):
+    for each device in devices:
+        if device.id == deviceId:
+            devices.remove(device)
+            break
+    allocatePower()
+
+// Update the power request of a connected device
+function updateDevice(deviceId, newRequestedPower):
+    for each device in devices:
+        if device.id == deviceId:
+            device.requestedPower = min(newRequestedPower, MAX_DEVICE_CAPACITY)
+            break
+    allocatePower()
+
+// Example Usage
+// t=0: Device A connects with a request of 40 units
+connectDevice("A", 40)
+
+// t=1: Device B connects with a request of 40 units
+connectDevice("B", 40)
+
+// t=2: Device C connects with a request of 40 units
+connectDevice("C", 40)
+
+// t=3: Device A updates its request to 20 units
+updateDevice("A", 20)
+
+// t=4: Device B disconnects
+disconnectDevice("B")
